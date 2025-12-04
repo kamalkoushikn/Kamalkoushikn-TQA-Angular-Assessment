@@ -120,11 +120,15 @@ exports.getChartById = async (req, res) => {
 // @desc    Calculate and create new chart
 // @route   POST /api/charts/calculate
 // @access  Public
-exports.calculateChart = async (req, res) => {
+exports.calculateChart = async (req, res, next) => {
     try {
+        console.log('calculateChart: Received POST request');
+        console.log('Request body:', req.body);
+        
         // Check for validation errors
         const errors = validationResult(req);
         if (!errors.isEmpty()) {
+            console.log('Validation errors:', errors.array());
             return res.status(400).json({
                 success: false,
                 errors: errors.array()
@@ -132,9 +136,11 @@ exports.calculateChart = async (req, res) => {
         }
 
         const { birthDate, birthTime, birthLocation, latitude, longitude, notes, createdBy } = req.body;
+        console.log('Extracted fields from request');
 
         // Generate astrological data (in real app, this would use actual calculations)
         const astroData = generateAstrologicalData(birthDate, birthTime, birthLocation);
+        console.log('Generated astrological data');
 
         const chartData = {
             birthDate: new Date(birthDate),
@@ -147,20 +153,27 @@ exports.calculateChart = async (req, res) => {
             ...(createdBy && { createdBy })
         };
 
+        console.log('Chart data prepared, creating document...');
         const chart = await Chart.create(chartData);
+        console.log('Chart created successfully:', chart._id);
 
+        console.log('Sending response');
         res.status(201).json({
             success: true,
             data: chart
         });
     } catch (error) {
+        console.error('calculateChart error:', error);
+        
         if (error.name === 'ValidationError') {
             const messages = Object.values(error.errors).map(err => err.message);
+            console.log('Returning validation error');
             return res.status(400).json({
                 success: false,
                 error: messages.join(', ')
             });
         }
+        console.log('Returning 500 error');
         res.status(500).json({
             success: false,
             error: error.message

@@ -23,6 +23,7 @@ export interface Chart {
         venus: Planet;
         mars: Planet;
     };
+    notes?: string;
 }
 
 export interface CalculateChartRequest {
